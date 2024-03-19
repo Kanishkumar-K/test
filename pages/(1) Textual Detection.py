@@ -6,7 +6,6 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import re
 import string
-import winsound
 
 # Load the model
 model = pickle.load(open('pickle/bestmodel.pkl', 'rb'))
@@ -74,7 +73,6 @@ def main():
             if prediction == 1:
                 st.warning(f"Warning: It may contain inappropriate words.")
                 # Play system alert sound (beep)
-                winsound.Beep(1000, 500)  # Frequency, Duration
                 # Apply red tint to entire screen with blink effect
                 st.markdown("""
                 <style>
