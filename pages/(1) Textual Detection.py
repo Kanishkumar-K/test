@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import re
 import string
+import winsound
 nltk.download('punkt')
 
 # Load the model
@@ -17,7 +18,10 @@ import pandas as pd
 dataset = pd.read_csv('./Dataset/text-data.csv')
 
 # Extract offensive words from the dataset
+
+
 offensive_words_dataset = set()
+
 for text in dataset['text']:
     words = nltk.word_tokenize(text)
     for word in words:
@@ -58,48 +62,58 @@ def main():
     # Input text area for user input
     input_text = st.text_area("Enter the text to analyze")
 
-    # Initialize list to store all comments
+    # Initialize list to store all comments and warnings
     if "comments" not in st.session_state:
         st.session_state.comments = []
 
-    # Predict button
+    if "warnings_shown" not in st.session_state:
+        st.session_state.warnings_shown = set()
+
+    # Predict button 
+    
     if st.button("Submit"):
         if input_text.strip() == "":
             st.error("Please provide some text!")
         else:
             # Make prediction
-            prediction = predict(input_text)
+            prediction = predict(input_text) 
 
             # Display prediction result and store the comment
             if prediction == 1:
-                st.warning(f"Warning: It may contain inappropriate words.")
-                # Play system alert sound (beep)
-                # Apply red tint to entire screen with blink effect
-                st.markdown("""
-                <style>
-                @keyframes blink {
-                    0% { opacity: 1; }
-                    50% { opacity: 0; }
-                    100% { opacity: 1; }
-                }
-                .red-overlay {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100vw;
-                    height: 100vh;
-                    background-color: rgba(255, 0, 0, 0.5);
-                    z-index: 99999;
-                    animation: blink 1s infinite;
-                }
-                </style>
-                <div class="red-overlay"></div>
-                """, unsafe_allow_html=True)
-                time.sleep(2)  # Wait for 2 seconds
-                st.markdown("""<style>.red-overlay { display: none; }</style>""", unsafe_allow_html=True)
-                st.session_state.comments.append(("The message was deleted by admin due to inappropriate content", True))  # Flag as deleted
+                if input_text not in st.session_state.warnings_shown:
+                    st.session_state.warnings_shown.add(input_text)
+                    st.warning(f"Warning: It may contain inappropriate words.")
+                    # Play system alert sound (beep)
+                    winsound.Beep(1000, 500)
+                    # Apply red tint to entire screen with blink effect
+                    st.markdown("""
+                    <style>
+                    @keyframes blink {
+                        0% { opacity: 1; }
+                        50% { opacity: 0; }
+                        100% { opacity: 1; }
+                    }
+                    .red-overlay {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        background-color: rgba(255, 0, 0, 0.5);
+                        z-index: 99999;
+                        animation: blink 1s infinite;
+                    }
+                    </style>
+                    <div class="red-overlay"></div>
+                    """, 
+                    unsafe_allow_html=True)
+                    
+                    time.sleep(2)  # Wait for 2 seconds
+                    st.markdown("""<style>.red-overlay { display: none; }</style>""", unsafe_allow_html=True)
+                else:
+                    st.session_state.comments.append(("The message was deleted by system due to inappropriate content", True))  # Flag as deleted
             else:
-                st.session_state.comments.append((input_text, False))  # Flag as not deleted
+                st.session_state.comments.append((input_text, False))
 
     # Display all comments
     st.header("Posted Messages")
@@ -108,6 +122,15 @@ def main():
             st.error(comment)
         else:
             st.write(comment)
+            
+    st.write(" ")
+    st.write(" ")
+    st.write(" ")
+    st.subheader("Model Accuracy")
+    expander_accuracy = st.expander("Information", expanded=False)
+    with expander_accuracy:
+        st.info("Model Accuracy using Random Forest (RF) Classifier!")
+        st.warning("Accuracy:  **_91.70 %_**")
 
 if __name__ == "__main__":
     main()
