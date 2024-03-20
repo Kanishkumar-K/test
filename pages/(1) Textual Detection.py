@@ -6,7 +6,6 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import re
 import string
-import winsound
 nltk.download('punkt')
 
 # Load the model
@@ -84,7 +83,6 @@ def main():
                     st.session_state.warnings_shown.add(input_text)
                     st.warning(f"Warning: It may contain inappropriate words.")
                     # Play system alert sound (beep)
-                    winsound.Beep(1000, 500)
                     # Apply red tint to entire screen with blink effect
                     st.markdown("""
                     <style>
