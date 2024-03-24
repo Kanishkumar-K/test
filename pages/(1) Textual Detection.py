@@ -17,8 +17,6 @@ import pandas as pd
 dataset = pd.read_csv('./Dataset/text-data.csv')
 
 # Extract offensive words from the dataset
-
-
 offensive_words_dataset = set()
 
 for text in dataset['text']:
@@ -36,7 +34,13 @@ ps = PorterStemmer()
 
 # Function to preprocess input text
 def preprocess_text(text):
-    return text
+    # Replace special characters with regex-friendly patterns
+    text = re.sub(r'[@#$*]', r'[aeiou]', text)
+    
+    # Remove punctuation and special characters
+    text = re.sub(r'[^\w\s]', '', text)
+    
+    return text.lower()  # Convert text to lowercase
 
 # Function to make predictions
 def predict(text):
@@ -61,6 +65,13 @@ def main():
     # Input text area for user input
     input_text = st.text_area("Enter the text to analyze")
 
+    # Check if input text contains special characters
+    contains_special_chars = re.search(r'[@#$*]', input_text) is not None
+
+    # Consent checkbox only if input text contains special characters
+    if contains_special_chars:
+        consent = st.checkbox("I'm aware masking derogatory words may lead to account suspension if found.")
+
     # Initialize list to store all comments and warnings
     if "comments" not in st.session_state:
         st.session_state.comments = []
@@ -69,10 +80,11 @@ def main():
         st.session_state.warnings_shown = set()
 
     # Predict button 
-    
     if st.button("Submit"):
         if input_text.strip() == "":
             st.error("Please provide some text!")
+        elif contains_special_chars and not consent:
+            st.warning("Please acknowledge that you are not using any masked derogatory words.")
         else:
             # Make prediction
             prediction = predict(input_text) 
@@ -120,10 +132,16 @@ def main():
             st.error(comment)
         else:
             st.write(comment)
-            
-    st.write(" ")
-    st.write(" ")
-    st.write(" ")
+    
+    # Show consent checkbox only if input text contains special characters
+    if contains_special_chars:
+        st.write(" ")
+        st.write(" ")
+        st.write(" ")
+        st.subheader("Masking Consent")
+        if consent:
+            st.success("Thank you for acknowledging!")
+    
     st.subheader("Model Accuracy")
     expander_accuracy = st.expander("Information", expanded=False)
     with expander_accuracy:
